@@ -41,7 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_16   /* Start @ of user Flash area */
-#define FLASH_USER_END_ADDR     ADDR_FLASH_PAGE_16 + FLASH_PAGE_SIZE - 1   /* End @ of user Flash area */
+#define FLASH_USER_END_ADDR     ADDR_FLASH_PAGE_16 + FLASH_PAGE_SIZE*8 - 1   /* End @ of user Flash area */
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -50,8 +50,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 int Address,indX;
-int oszlopok = 2; //EZT VÁLTOZTASD, hogy hány oszlopot szeretnél
-int64_t data_readed[256];
+int oszlopok = 4; //EZT VÁLTOZTASD, hogy hány oszlopot szeretnél
+int dataSize = 4096; //EZT VÁLTOZTASD, hogy hány adatot szeretnél kiiratni (max: 4096)
+int32_t data_readed[4096];
 
 /* USER CODE END PV */
 
@@ -114,25 +115,25 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 		//set data
-	for(int i=0;i< 256;i++){
+	for(int i=0;i< 4096;i++){
 		data_readed[i]=0;
 	}
+	HAL_Delay(2000);
 	
-	HAL_Delay(5000); //legyen ido rácsatlakozni
 	Address = FLASH_USER_START_ADDR;
 	indX = 0;
-  while (Address < FLASH_USER_END_ADDR && indX < 256)
+  while (Address < FLASH_USER_END_ADDR && indX < dataSize)
   {
-    data_readed[indX] = *(__IO int64_t *)Address;
+    data_readed[indX] = *(__IO int32_t *)Address;
 
-    Address +=8;
-		indX++;
+    Address += 4;
+		indX += 1;
   }
 	
-	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
-	for(int i = 0; i < 256; i++){
+	for(int i = 0; i < dataSize; i++){
 		if(i%oszlopok == 0) printf("\n");
-		printf("%lli\t",data_readed[i]);
+		if(i%(oszlopok*10)==0) printf("------------------------\n");
+		printf("%i.",data_readed[i]);
 	}
 
   /* USER CODE END 2 */
